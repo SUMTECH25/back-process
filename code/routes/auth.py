@@ -87,11 +87,11 @@ def login():
         return jsonify({'error': str(e)}), 500
 
 @auth_bp.route('/profile', methods=['GET'])
-@jwt_required()
+# @jwt_required()  # 인증 비활성화 
 def get_profile():
     """사용자 프로필 조회"""
     try:
-        user_id = int(get_jwt_identity())
+        user_id = 1  # 고정된 테스트 사용자 ID
         user = User.query.get(user_id)
         
         if not user:
@@ -105,11 +105,11 @@ def get_profile():
         return jsonify({'error': str(e)}), 500
 
 @auth_bp.route('/profile', methods=['PUT'])
-@jwt_required()
+# @jwt_required()  # 인증 비활성화
 def update_profile():
     """사용자 프로필 업데이트"""
     try:
-        user_id = int(get_jwt_identity())
+        user_id = 1  # 고정된 테스트 사용자 ID
         user = User.query.get(user_id)
         
         if not user:

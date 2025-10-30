@@ -3,7 +3,11 @@
 """
 
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required, get_jwt_identity
+# JWT 인증 비활성화됨
+# from flask_jwt_extended import jwt_required, get_jwt_identity
+
+# 기본 테스트 사용자 ID (인증 비활성화용)
+DEFAULT_USER_ID = 1
 from datetime import datetime, date
 from models.user import User
 from models.daily_record import DailyRecord
@@ -14,11 +18,11 @@ from app import db
 rewards_bp = Blueprint('rewards', __name__)
 
 @rewards_bp.route('/check', methods=['POST'])
-@jwt_required()
+# @jwt_required()  # 인증 비활성화
 def check_milestones():
     """마일스톤 달성 여부 확인 및 보상 생성"""
     try:
-        user_id = int(get_jwt_identity())
+        user_id = DEFAULT_USER_ID  # 고정된 테스트 사용자 ID
         
         # 현재 연속 기록 일수
         streak_count = DailyRecord.get_streak_count(user_id)
@@ -36,11 +40,11 @@ def check_milestones():
         return jsonify({'error': str(e)}), 500
 
 @rewards_bp.route('/milestones', methods=['GET'])
-@jwt_required()
+# @jwt_required()  # 인증 비활성화
 def get_milestones():
     """사용자의 마일스톤 목록 조회"""
     try:
-        user_id = int(get_jwt_identity())
+        user_id = DEFAULT_USER_ID  # 고정된 테스트 사용자 ID
         
         # 쿼리 파라미터
         milestone_type = request.args.get('type')  # '3', '7', '30'
@@ -55,11 +59,11 @@ def get_milestones():
         return jsonify({'error': str(e)}), 500
 
 @rewards_bp.route('/milestones/<int:milestone_id>/claim', methods=['POST'])
-@jwt_required()
+# @jwt_required()  # 인증 비활성화
 def claim_reward(milestone_id):
     """보상 수령"""
     try:
-        user_id = int(get_jwt_identity())
+        user_id = DEFAULT_USER_ID  # 고정된 테스트 사용자 ID
         
         milestone = Milestone.query.filter_by(
             id=milestone_id,
@@ -90,11 +94,11 @@ def claim_reward(milestone_id):
         return jsonify({'error': str(e)}), 500
 
 @rewards_bp.route('/progress', methods=['GET'])
-@jwt_required()
+# @jwt_required()  # 인증 비활성화
 def get_progress():
     """보상 진행 상황 조회"""
     try:
-        user_id = int(get_jwt_identity())
+        user_id = DEFAULT_USER_ID  # 고정된 테스트 사용자 ID
         
         # 현재 연속 기록
         streak_count = DailyRecord.get_streak_count(user_id)
@@ -138,11 +142,11 @@ def get_progress():
         return jsonify({'error': str(e)}), 500
 
 @rewards_bp.route('/next-milestone', methods=['GET'])
-@jwt_required()
+# @jwt_required()  # 인증 비활성화
 def get_next_milestone():
     """다음 마일스톤 정보"""
     try:
-        user_id = int(get_jwt_identity())
+        user_id = DEFAULT_USER_ID  # 고정된 테스트 사용자 ID
         streak_count = DailyRecord.get_streak_count(user_id)
         
         # 다음 마일스톤 찾기

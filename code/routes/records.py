@@ -3,7 +3,11 @@
 """
 
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required, get_jwt_identity
+# JWT 인증 비활성화됨
+# from flask_jwt_extended import jwt_required, get_jwt_identity
+
+# 기본 테스트 사용자 ID (인증 비활성화용)
+DEFAULT_USER_ID = 1
 from datetime import datetime, date, timedelta
 from models.user import User
 from models.daily_record import DailyRecord
@@ -17,11 +21,11 @@ logger = logging.getLogger(__name__)
 records_bp = Blueprint('records', __name__)
 
 @records_bp.route('/', methods=['POST'])
-@jwt_required()
+# @jwt_required()  # 인증 비활성화
 def create_record():
     """일일 기록 생성"""
     try:
-        user_id = int(get_jwt_identity())
+        user_id = DEFAULT_USER_ID  # 고정된 테스트 사용자 ID
         data = request.get_json()
         
         # 필수 필드 검증
@@ -108,11 +112,11 @@ def create_record():
         return jsonify({'error': str(e)}), 500
 
 @records_bp.route('/', methods=['GET'])
-@jwt_required()
+# @jwt_required()  # 인증 비활성화
 def get_records():
     """사용자의 기록 목록 조회"""
     try:
-        user_id = int(get_jwt_identity())
+        user_id = DEFAULT_USER_ID  # 고정된 테스트 사용자 ID
         
         # 쿼리 파라미터
         start_date = request.args.get('start_date')
@@ -149,11 +153,11 @@ def get_records():
         return jsonify({'error': str(e)}), 500
 
 @records_bp.route('/<int:record_id>', methods=['GET'])
-@jwt_required()
+# @jwt_required()  # 인증 비활성화
 def get_record(record_id):
     """특정 기록 조회"""
     try:
-        user_id = int(get_jwt_identity())
+        user_id = DEFAULT_USER_ID  # 고정된 테스트 사용자 ID
         
         record = DailyRecord.query.filter_by(
             id=record_id, 
@@ -171,11 +175,11 @@ def get_record(record_id):
         return jsonify({'error': str(e)}), 500
 
 @records_bp.route('/<int:record_id>', methods=['PUT'])
-@jwt_required()
+# @jwt_required()  # 인증 비활성화
 def update_record(record_id):
     """기록 업데이트"""
     try:
-        user_id = int(get_jwt_identity())
+        user_id = DEFAULT_USER_ID  # 고정된 테스트 사용자 ID
         
         record = DailyRecord.query.filter_by(
             id=record_id, 
@@ -213,11 +217,11 @@ def update_record(record_id):
         return jsonify({'error': str(e)}), 500
 
 @records_bp.route('/today', methods=['GET'])
-@jwt_required()
+# @jwt_required()  # 인증 비활성화
 def get_today_record():
     """오늘의 기록 조회"""
     try:
-        user_id = int(get_jwt_identity())
+        user_id = DEFAULT_USER_ID  # 고정된 테스트 사용자 ID
         today = date.today()
         
         record = DailyRecord.query.filter_by(

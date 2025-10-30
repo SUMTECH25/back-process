@@ -3,7 +3,11 @@
 """
 
 from flask import Blueprint, request, jsonify, send_file
-from flask_jwt_extended import jwt_required, get_jwt_identity
+# JWT 인증 비활성화됨
+# from flask_jwt_extended import jwt_required, get_jwt_identity
+
+# 기본 테스트 사용자 ID (인증 비활성화용)
+DEFAULT_USER_ID = 1
 from datetime import datetime, date, timedelta
 from models.user import User
 from models.daily_record import DailyRecord
@@ -15,11 +19,11 @@ import os
 reports_bp = Blueprint('reports', __name__)
 
 @reports_bp.route('/analysis/<milestone_type>', methods=['GET'])
-@jwt_required()
+# @jwt_required()  # 인증 비활성화
 def get_analysis_report(milestone_type):
     """분석 리포트 조회 (3일, 7일, 30일)"""
     try:
-        user_id = int(get_jwt_identity())
+        user_id = DEFAULT_USER_ID  # 고정된 테스트 사용자 ID
         
         if milestone_type not in ['3', '7', '30']:
             return jsonify({'error': 'Invalid milestone type'}), 400
@@ -52,11 +56,11 @@ def get_analysis_report(milestone_type):
         return jsonify({'error': str(e)}), 500
 
 @reports_bp.route('/pdf/<int:milestone_id>', methods=['GET'])
-@jwt_required()
+# @jwt_required()  # 인증 비활성화
 def get_pdf_report(milestone_id):
     """PDF 리포트 다운로드 (30일 전용)"""
     try:
-        user_id = int(get_jwt_identity())
+        user_id = DEFAULT_USER_ID  # 고정된 테스트 사용자 ID
         
         milestone = Milestone.query.filter_by(
             id=milestone_id,
@@ -84,11 +88,11 @@ def get_pdf_report(milestone_id):
         return jsonify({'error': str(e)}), 500
 
 @reports_bp.route('/summary', methods=['GET'])
-@jwt_required()
+# @jwt_required()  # 인증 비활성화
 def get_summary():
     """전체 요약 리포트"""
     try:
-        user_id = int(get_jwt_identity())
+        user_id = DEFAULT_USER_ID  # 고정된 테스트 사용자 ID
         
         # 쿼리 파라미터
         days = request.args.get('days', 30, type=int)
@@ -156,11 +160,11 @@ def get_summary():
         return jsonify({'error': str(e)}), 500
 
 @reports_bp.route('/insights', methods=['GET'])
-@jwt_required()
+# @jwt_required()  # 인증 비활성화
 def get_insights():
     """개인화된 인사이트 제공"""
     try:
-        user_id = int(get_jwt_identity())
+        user_id = DEFAULT_USER_ID  # 고정된 테스트 사용자 ID
         
         # 최근 30일 데이터
         end_date = date.today()

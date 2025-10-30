@@ -4,7 +4,11 @@
 
 import os
 from flask import Blueprint, request, jsonify, current_app
-from flask_jwt_extended import jwt_required, get_jwt_identity
+# JWT 인증 비활성화됨
+# from flask_jwt_extended import jwt_required, get_jwt_identity
+
+# 기본 테스트 사용자 ID (인증 비활성화용)
+DEFAULT_USER_ID = 1
 from werkzeug.utils import secure_filename
 from datetime import datetime, date
 from models.user import User
@@ -38,11 +42,11 @@ def ensure_upload_dir():
     return upload_dir
 
 @audio_bp.route('/analyze', methods=['POST'])
-@jwt_required()
+# @jwt_required()  # 인증 비활성화
 def analyze_audio():
     """오디오 파일 업로드 및 스트레스 분석"""
     try:
-        user_id = int(get_jwt_identity())
+        user_id = DEFAULT_USER_ID  # 고정된 테스트 사용자 ID
         
         # 파일 업로드 확인
         if 'audio_file' not in request.files:
@@ -176,11 +180,11 @@ def analyze_audio():
         return jsonify({'error': str(e)}), 500
 
 @audio_bp.route('/analyze-direct', methods=['POST'])
-@jwt_required()
+# @jwt_required()  # 인증 비활성화
 def analyze_audio_direct():
     """오디오 데이터를 직접 받아서 분석 (파일 저장 안함)"""
     try:
-        user_id = int(get_jwt_identity())
+        user_id = DEFAULT_USER_ID  # 고정된 테스트 사용자 ID
         
         # 파일 업로드 확인
         if 'audio_file' not in request.files:
@@ -235,11 +239,11 @@ def get_supported_formats():
     }), 200
 
 @audio_bp.route('/records/<int:record_id>/audio', methods=['GET'])
-@jwt_required()
+# @jwt_required()  # 인증 비활성화
 def get_record_audio_analysis(record_id):
     """특정 기록의 오디오 분석 결과 조회"""
     try:
-        user_id = int(get_jwt_identity())
+        user_id = DEFAULT_USER_ID  # 고정된 테스트 사용자 ID
         
         record = DailyRecord.query.filter_by(
             id=record_id,
@@ -264,11 +268,11 @@ def get_record_audio_analysis(record_id):
         return jsonify({'error': str(e)}), 500
 
 @audio_bp.route('/recent-analyses', methods=['GET'])
-@jwt_required()
+# @jwt_required()  # 인증 비활성화
 def get_recent_audio_analyses():
     """최근 오디오 분석 결과들 조회"""
     try:
-        user_id = int(get_jwt_identity())
+        user_id = DEFAULT_USER_ID  # 고정된 테스트 사용자 ID
         limit = request.args.get('limit', 10, type=int)
         
         # 오디오 분석이 있는 기록들만 조회
@@ -297,11 +301,11 @@ def get_recent_audio_analyses():
         return jsonify({'error': str(e)}), 500
 
 @audio_bp.route('/stats', methods=['GET'])
-@jwt_required()
+# @jwt_required()  # 인증 비활성화
 def get_audio_analysis_stats():
     """사용자의 오디오 분석 통계"""
     try:
-        user_id = int(get_jwt_identity())
+        user_id = DEFAULT_USER_ID  # 고정된 테스트 사용자 ID
         
         # 오디오 분석이 있는 기록 수
         total_audio_records = DailyRecord.query.filter(
