@@ -1,1 +1,30 @@
+# --- Core Framework ---
+flask
+flask-sqlalchemy
+flask-migrate
+flask-bcrypt
+flask-jwt-extended
+flask-cors
+
+# --- Data & Analysis ---
+pandas
+scikit-learn
+numpy
+
+# --- NLP & Audio Analysis (스트레스 분석) ---
+# PyTorch 2.0.1이 더 이상 제공되지 않으므로 사용 가능한 최신 버전으로 업데이트
+# ARM64에서 pre-built wheel만 사용하도록 최적화, tokenizers 컴파일 문제 완전 회피
+torch
+torchaudio
+transformers
+librosa
+soundfile
+huggingface-hub
+
+# --- Report & Utilities ---
+reportlab
+apscheduler
+python-dotenv
+
+# --- Development ---
 jupyterlab>3.0
