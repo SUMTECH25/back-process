@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>음성 스트레스 분석 API 테스트</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .container { background: #f5f5f5; padding: 20px; border-radius: 10px; margin: 10px 0; }
+        .result { background: #e8f5e8; padding: 15px; border-radius: 5px; margin: 10px 0; }
+        .error { background: #f5e8e8; padding: 15px; border-radius: 5px; margin: 10px 0; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        input[type="file"] { margin: 10px 0; }
+        .stats { display: flex; justify-content: space-around; }
+        .stat { text-align: center; padding: 10px; background: white; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>🎤 음성 스트레스 분석 API 테스트</h1>
+    
+    <div class="container">
+        <h2>1. 음성 파일 업로드 분석</h2>
+        <input type="file" id="audioFileInput" accept="audio/*">
+        <button onclick="analyzeUploadedFile()">분석하기</button>
+        <div id="uploadResult"></div>
+    </div>
+    
+    <div class="container">
+        <h2>2. 음성 녹음 및 분석</h2>
+        <button id="recordButton" onclick="toggleRecording()">녹음 시작</button>
+        <div id="recordingStatus"></div>
+        <div id="recordResult"></div>
+    </div>
+    
+    <div class="container">
+        <h2>3. 분석 결과</h2>
+        <div class="stats">
+            <div class="stat">
+                <h3>스트레스 레벨</h3>
+                <div id="stressLevel">-</div>
+            </div>
+            <div class="stat">
+                <h3>스트레스 확률</h3>
+                <div id="stressProbability">-</div>
+            </div>
+            <div class="stat">
+                <h3>신뢰도</h3>
+                <div id="confidence">-</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <h2>4. 일일 기록으로 저장</h2>
+        <button onclick="saveAsRecord()" id="saveRecordBtn" disabled>기록으로 저장</button>
+        <div id="saveResult"></div>
+    </div>
+
+    <script src="frontend_voice_api_example.js"></script>
+    <script>
+        let lastAnalyzedFile = null;
+        let lastAnalyzedBlob = null;
+        let mediaRecorder = null;
+        let recordedChunks = [];
+        
+        // 업로드된 파일 분석
+        async function analyzeUploadedFile() {
+            const fileInput = document.getElementById('audioFileInput');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('음성 파일을 선택해주세요.');
+                return;
+            }
+            
+            try {
+                showLoading('uploadResult', '분석 중...');
+                const voiceAPI = new VoiceAPI();
+                const result = await voiceAPI.analyzeVoiceFile(file, false);
+                
+                lastAnalyzedFile = file;
+                displayResult(result, 'uploadResult');
+                document.getElementById('saveRecordBtn').disabled = false;
+                
+            } catch (error) {
+                showError('uploadResult', '분석 중 오류가 발생했습니다: ' + error.message);
+            }
+        }
+        
+        // 녹음 토글
+        async function toggleRecording() {
+            const button = document.getElementById('recordButton');
+            const status = document.getElementById('recordingStatus');
+            
+            if (!mediaRecorder || mediaRecorder.state === 'inactive') {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    recordedChunks = [];
+                    
+                    mediaRecorder.ondataavailable = (event) => {
+                        if (event.data.size > 0) {
+                            recordedChunks.push(event.data);
+                        }
+                    };
+                    
+                    mediaRecorder.onstop = async () => {
+                        const audioBlob = new Blob(recordedChunks, { type: 'audio/wav' });
+                        await analyzeRecordedVoice(audioBlob);
+                    };
+                    
+                    mediaRecorder.start();
+                    button.textContent = '녹음 중지';
+                    status.innerHTML = '<div class="result">🔴 녹음 중...</div>';
+                    
+                } catch (error) {
+                    showError('recordingStatus', '마이크 접근 권한이 필요합니다: ' + error.message);
+                }
+            } else {
+                mediaRecorder.stop();
+                button.textContent = '녹음 시작';
+                status.innerHTML = '';
+            }
+        }
+        
+        // 녹음된 음성 분석
+        async function analyzeRecordedVoice(audioBlob) {
+            try {
+                showLoading('recordResult', '녹음된 음성 분석 중...');
+                const voiceAPI = new VoiceAPI();
+                const result = await voiceAPI.analyzeRecordedVoice(audioBlob, false);
+                
+                lastAnalyzedBlob = audioBlob;
+                displayResult(result, 'recordResult');
+                document.getElementById('saveRecordBtn').disabled = false;
+                
+            } catch (error) {
+                showError('recordResult', '분석 중 오류가 발생했습니다: ' + error.message);
+            }
+        }
+        
+        // 기록으로 저장
+        async function saveAsRecord() {
+            const recordData = {
+                stress_level: 5,
+                mood: 'normal',
+                energy_level: 5,
+                daily_sentence: '음성 API 테스트 기록입니다.',
+                notes: 'HTML 테스트 페이지에서 생성',
+                save_to_record: 'true',
+                update_stress_level: 'true'
+            };
+            
+            try {
+                showLoading('saveResult', '기록 저장 중...');
+                const voiceAPI = new VoiceAPI();
+                let result;
+                
+                if (lastAnalyzedFile) {
+                    result = await voiceAPI.analyzeVoiceFile(lastAnalyzedFile, true, recordData);
+                } else if (lastAnalyzedBlob) {
+                    result = await voiceAPI.analyzeRecordedVoice(lastAnalyzedBlob, true, recordData);
+                } else {
+                    throw new Error('저장할 음성 데이터가 없습니다.');
+                }
+                
+                if (result.record) {
+                    document.getElementById('saveResult').innerHTML = 
+                        `<div class="result">✅ 기록이 저장되었습니다! (ID: ${result.record.id})</div>`;
+                }
+                
+            } catch (error) {
+                showError('saveResult', '저장 중 오류가 발생했습니다: ' + error.message);
+            }
+        }
+        
+        // 결과 표시
+        function displayResult(result, containerId) {
+            if (result.analysis_result) {
+                const analysis = result.analysis_result;
+                
+                document.getElementById('stressLevel').textContent = analysis.stress_level + '/10';
+                document.getElementById('stressProbability').textContent = analysis.stressed_probability + '%';
+                document.getElementById('confidence').textContent = analysis.confidence + '%';
+                
+                document.getElementById(containerId).innerHTML = `
+                    <div class="result">
+                        <h4>✅ 분석 완료</h4>
+                        <p><strong>스트레스 레벨:</strong> ${analysis.stress_level}/10</p>
+                        <p><strong>스트레스 확률:</strong> ${analysis.stressed_probability}%</p>
+                        <p><strong>비스트레스 확률:</strong> ${analysis.not_stressed_probability}%</p>
+                        <p><strong>신뢰도:</strong> ${analysis.confidence}%</p>
+                        <p><strong>모델:</strong> ${analysis.model_used}</p>
+                        <p><strong>분석 시간:</strong> ${new Date(analysis.analysis_timestamp).toLocaleString()}</p>
+                    </div>
+                `;
+            } else {
+                showError(containerId, '분석 결과를 받을 수 없습니다.');
+            }
+        }
+        
+        function showLoading(containerId, message) {
+            document.getElementById(containerId).innerHTML = `<div class="result">${message}</div>`;
+        }
+        
+        function showError(containerId, message) {
+            document.getElementById(containerId).innerHTML = `<div class="error">${message}</div>`;
+        }
+    </script>
+</body>
+</html>
