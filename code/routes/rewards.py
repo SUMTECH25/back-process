@@ -17,6 +17,54 @@ from app import db
 
 rewards_bp = Blueprint('rewards', __name__)
 
+@rewards_bp.route('/progress', methods=['GET'])
+# @jwt_required()  # 인증 비활성화
+def get_reward_progress():
+    """보상 진행 상황 조회"""
+    try:
+        user_id = DEFAULT_USER_ID  # 고정된 테스트 사용자 ID
+        
+        # 현재 연속 기록 일수
+        current_streak = DailyRecord.get_streak_count(user_id)
+        
+        # 마일스톤 정의
+        milestones = [
+            {"days": 3, "name": "3일 연속", "description": "패턴 발견", "type": "pattern_analysis"},
+            {"days": 7, "name": "7일 연속", "description": "한계점 분석", "type": "threshold_analysis"},
+            {"days": 30, "name": "30일 연속", "description": "탈출 시나리오", "type": "escape_scenario"}
+        ]
+        
+        # 다음 마일스톤 찾기
+        next_milestone = None
+        achieved_milestones = []
+        
+        for ms in milestones:
+            if current_streak >= ms["days"]:
+                achieved_milestones.append(ms)
+            elif next_milestone is None:
+                next_milestone = {
+                    "days": ms["days"],
+                    "name": ms["name"], 
+                    "description": ms["description"],
+                    "days_remaining": ms["days"] - current_streak
+                }
+        
+        return jsonify({
+            "current_streak": current_streak,
+            "next_milestone": next_milestone,
+            "achieved_milestones": achieved_milestones,
+            "milestones": milestones
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            "error": str(e),
+            "current_streak": 0,
+            "next_milestone": None,
+            "achieved_milestones": [],
+            "milestones": []
+        }), 500
+
 @rewards_bp.route('/check', methods=['POST'])
 # @jwt_required()  # 인증 비활성화
 def check_milestones():

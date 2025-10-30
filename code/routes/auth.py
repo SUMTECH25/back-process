@@ -2,13 +2,16 @@
 인증 관련 라우트
 """
 
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from werkzeug.security import generate_password_hash, check_password_hash
 from models.user import User
-from app import db
 
 auth_bp = Blueprint('auth', __name__)
+
+def get_db():
+    """현재 앱의 db 인스턴스 반환"""
+    return current_app.extensions['sqlalchemy']
 
 @auth_bp.route('/register', methods=['POST'])
 def register():
